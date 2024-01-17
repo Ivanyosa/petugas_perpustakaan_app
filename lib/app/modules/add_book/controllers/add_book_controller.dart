@@ -1,17 +1,17 @@
-import 'dart:developer';
-
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:petugas_perpustakaan_app/app/data/constant/endpoint.dart';
 import 'package:petugas_perpustakaan_app/app/data/provider/api_provider.dart';
-import 'package:petugas_perpustakaan_app/app/data/provider/storage_provider.dart';
-import 'package:petugas_perpustakaan_app/app/routes/app_pages.dart';
 import 'package:dio/dio.dart' as dio;
 
-class LoginController extends GetxController {
+class AddBookController extends GetxController {
+  //TODO: Implement AddBookController
   final GlobalKey<FormState> formkey= GlobalKey<FormState>();
-  final TextEditingController usernameController = TextEditingController();
-  final TextEditingController passwordController = TextEditingController();
+  final TextEditingController judulController = TextEditingController();
+  final TextEditingController penulisController = TextEditingController();
+  final TextEditingController penerbitController = TextEditingController();
+  final TextEditingController tahunController = TextEditingController();
 
   final count = 0.obs;
   @override
@@ -22,11 +22,6 @@ class LoginController extends GetxController {
   @override
   void onReady() {
     super.onReady();
-    String status = StorageProvider.read(StorageKey.status);
-    log("status : $status");
-    if(status == "logged"){
-      Get.offAllNamed(Routes.HOME);
-    }
   }
 
   @override
@@ -36,30 +31,33 @@ class LoginController extends GetxController {
 
   void increment() => count.value++;
 
-  final loadingLogin = false.obs;
-  login() async{
-    loadingLogin(true);
+  final loadingBook = false.obs;
+  addBook() async{
+    loadingBook(true);
     try{
       FocusScope.of(Get.context!).unfocus();
       formkey.currentState?.save();
       if(formkey.currentState!.validate()) {
-        final response = await ApiProvider.instance().post(Endpoint.login,
-        data: dio.FormData.fromMap(
-          {"username": usernameController.text.toString(),
-            "password": passwordController.text.toString()}));
+        final response = await ApiProvider.instance().post(Endpoint.book,
+            data: {
+              "judul": judulController.text.toString(),
+              "penulis": penulisController.text.toString(),
+              "penerbit": penerbitController.text.toString(),
+              "tahun_terbit": int.parse(tahunController.text.toString())
+            }
+            );
         if(response.statusCode == 200){
-          await StorageProvider.write(StorageKey.status, "logged");
-          Get.offAllNamed(Routes.HOME);
+          Get.back();
         }else{
           Get.snackbar("Sorry","Login Gagal", backgroundColor: Colors.orange);
         }
       }
-      loadingLogin(false);
+      loadingBook(false);
     }on dio.DioException catch (e) {
-      loadingLogin(false);
+      loadingBook(false);
       Get.snackbar("Sorry", e.message ?? "",backgroundColor: Colors.red);
     }catch(e) {
-      loadingLogin(false);
+      loadingBook(false);
       Get.snackbar("Error",e.toString(),backgroundColor: Colors.red);
       throw Exception("Error: $e");
     }
